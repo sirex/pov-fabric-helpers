@@ -34,7 +34,10 @@ def ensure_apt_not_outdated():
 
 def package_installed(package):
     """Check if the specified packages is installed."""
-    return exists("/var/lib/dpkg/info/{}.list".format(package))
+    # XXX: doing this in a loop is slow :(
+    with quiet():
+        status = run("dpkg-query -W --showformat='${Status}' %s" % package)
+        return status == "install ok installed"
 
 
 def install_packages(*packages, **kw):
@@ -48,10 +51,8 @@ def install_packages(*packages, **kw):
 
     Keyword arguments:
 
-    - ``missing_only`` (default: True) -- apt-get install only the missing
-      packages.  This tries to autodetect which packages are already installed
-      with some shaky logic that can result in more work being done than
-      necessary but shouldn't cause errors.
+    - ``missing_only`` (default: False) -- apt-get install only the missing
+      packages.  This can be slower than just letting apt figure it out.
 
     - ``interactive`` (default: False) -- allow interactive prompts during
       package installation.
