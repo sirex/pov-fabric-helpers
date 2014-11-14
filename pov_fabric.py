@@ -193,7 +193,7 @@ class Instance(object):
 
         Useful for string formatting, e.g. ::
 
-            print('{name} is on {host}'.format(instance._asdict()))
+            print('{name} is on {host}'.format(**instance._asdict()))
 
         Mimics the API of ``collections.namedtuple``.
         """
@@ -256,4 +256,3 @@ def get_instance(instance_name=None):
                   known_instances=", ".join(instances),
                   instance=instances[0],
                   command=env.command))
-
