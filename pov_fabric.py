@@ -32,7 +32,12 @@ def ensure_apt_not_outdated():
         sudo("apt-get update -qq")
 
 
-def install_packages(*packages):
+def package_installed(package):
+    """Check if the specified packages is installed."""
+    return exists("/var/lib/dpkg/info/{}.list".format(package))
+
+
+def install_packages(*packages, **kw):
     """Install system packages.
 
     You can use any of these styles::
@@ -41,12 +46,34 @@ def install_packages(*packages):
         install_packages('foo', 'bar')
         install_packages(['foo', 'bar'])
 
+    Keyword arguments:
+
+    - ``missing_only`` (default: True) -- apt-get install only the missing
+      packages.  This tries to autodetect which packages are already installed
+      with some shaky logic that can result in more work being done than
+      necessary but shouldn't cause errors.
+
+    - ``interactive`` (default: False) -- allow interactive prompts during
+      package installation.
+
     """
-    ensure_apt_not_outdated()
+    missing_only = kw.pop('missing_only', True)
+    interactive = kw.pop('interactive', False)
+    if kw:
+        raise TypeError('unexpected keyword arguments: {}'
+                        .format(', '.join(sorted(kw))))
     if len(packages) == 1 and not isinstance(packages[0], str):
         # handle lists and tuples
         packages = packages[0]
-    sudo("apt-get install -qq -y %s" % " ".join(packages))
+    if missing_only:
+        packages = [p for p in packages if not package_installed(p)]
+    if not packages:
+        return
+    ensure_apt_not_outdated()
+    command = "apt-get install -qq -y %s" % " ".join(packages)
+    if not interactive:
+        command = "DEBIAN_FRONTEND=noninteractive " + command
+    sudo(command)
 
 
 def ensure_known_host(host_key, known_hosts='/root/.ssh/known_hosts'):
