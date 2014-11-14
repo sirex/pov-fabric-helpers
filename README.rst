@@ -96,7 +96,8 @@ To facilitate this ``pov_fabric`` provides three things:
     @task
     def look_around():
         instance = get_instance()
-        run('hostname')
+        with settings(host=instance.host):
+            run('hostname')
 
 
 Previously I used a slightly different command style ::
@@ -108,7 +109,8 @@ and this can still be supported if you write your tasks like this ::
     @task
     def look_around(instance=None):
         instance = get_instance(instance)
-        run('hostname')
+        with settings(host=instance.host):
+            run('hostname')
 
 Be careful if you mix styles, e.g. ::
 
