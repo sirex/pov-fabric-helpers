@@ -34,3 +34,85 @@ and in your ``fabfile.py`` add ::
 
 Then remind your users to run ``git submodule init`` after they clone the repo
 with the fabfile.
+
+
+Instance management
+-------------------
+
+All of my fabfiles can manage several *instances* of a particular service.
+Externally this looks like ::
+
+  fab instance1 task1 task2 instance2 task3
+
+which executes Fabric tasks ``task1`` and ``task2`` on instance ``instance1``
+and then executes ``task3`` on ``instance2``.
+
+An instance defines various parameters, such as
+
+- what server hosts it
+- where on the filesystem it lives
+- what Unix user IDs are used
+- what database is used for this instance
+- etc.
+
+To facilitate this ``pov_fabric`` provides three things:
+
+- an ``Instance`` class that should be subclassed to provide your own instances ::
+
+    from pov_fabric import Instance as BaseInstance
+
+    class Instance(BaseInstance):
+        def __init__(self, name, host, home='/opt/sentry', user='sentry',
+                     dbname='sentry'):
+            super(Instance, self).Instance.__init__(name, host)
+            self.home = home
+            self.user = user
+            self.dbname = dbname
+
+- ``Instance.define()`` that defines new instances and creates tasks for
+  selecting them ::
+
+    Instance.define(
+        name='testing',
+        host='root@vagrantbox',
+    )
+    Instance.define(
+        name='production',
+        host='server1.pov.lt',
+    )
+    Instance.define(
+        name='staging',
+        host='server1.pov.lt',
+        home='/opt/sentry-staging',
+        user='sentry-staging',
+        dbname='sentry-staging',
+    )
+
+- A ``get_instance()`` method that returns the currently selected instance
+  (or aborts with an error if the user didn't select one) ::
+
+    from pov_fabric import get_instance
+
+    @task
+    def look_around():
+        instance = get_instance()
+        run('hostname')
+
+
+Previously I used a slightly different command style ::
+
+    fab task1:instance1 task2:instance1 task3:instance2
+
+and this can still be supported if you write your tasks like this ::
+
+    @task
+    def look_around(instance=None):
+        instance = get_instance(instance)
+        run('hostname')
+
+Be careful if you mix styles, e.g. ::
+
+    fab instance1 task1 task2:instance2 task3
+
+will run ``task1`` and ``task3`` on ``instance1`` and it will run ``task2`` on
+``instance2``.

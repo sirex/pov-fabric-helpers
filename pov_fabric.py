@@ -2,10 +2,11 @@
 Fabric helpers
 """
 
+import sys
 import posixpath
 from pipes import quote  # TBD: use shlex.quote on Python 3.2+
 
-from fabric.api import run, sudo, quiet, settings, cd
+from fabric.api import run, sudo, quiet, settings, cd, env, abort, task
 from fabric.contrib.files import exists, append
 
 
@@ -149,4 +150,98 @@ def changelog_append(message):
     Shortcut for changelog(message, append=True).
     """
     changelog(message, append=True)
+
+
+#
+# Instance management
+#
+
+
+class Instance(object):
+    """Service instance configuration.
+
+    Subclass to add more parameters, e.g. ::
+
+        from pov_fabric import Instance as BaseInstance
+
+        class Instance(BaseInstance):
+            def __init__(self, name, host, home='/opt/project'):
+                super(Instance, self).Instance.__init__(name, host)
+                self.home = home
+
+    """
+
+    def __init__(self, name, host, **kwargs):
+        self.name = name
+        self.host = host
+        self.__dict__.update(kwargs)
+
+    def _asdict(self):
+        """Return the instance parameters as a dict.
+
+        Useful for string formatting, e.g. ::
+
+            print('{name} is on {host}'.format(instance._asdict()))
+
+        Mimics the API of ``collections.namedtuple``.
+        """
+        return self.__dict__
+
+    @classmethod
+    def define(cls, *args, **kwargs):
+        """Define an instance.
+
+        Creates a new Instance object with the given constructor arguments,
+        registers it in env.instances and defines an instance selector task.
+        """
+        instance = cls(*args, **kwargs)
+        _define_instance(instance)
+        _define_instance_task(instance.name, stacklevel=2)
+
+
+def _define_instance(instance):
+    """Define an instance.
+
+    Instances are stored in the ``env.instances`` dictionary, which is created
+    on demand.
+    """
+    if not hasattr(env, 'instances'):
+        env.instances = {}
+    if instance.name in env.instances:
+        abort("Instance {name} is already defined.".format(name=instance.name))
+    env.instances[instance.name] = instance
+
+
+def _define_instance_task(name, stacklevel=1):
+    """Define an instance task
+
+    This task will set env.instance to the name of the task.
+    """
+    def fn():
+        env.instance = name
+    fn.__doc__ = """Select instance '%s' for subsequent tasks.""" % name
+    instance_task = task(name=name)(fn)
+    sys._getframe(stacklevel).f_globals[name.replace('-', '_')] = instance_task
+
+
+def get_instance(instance_name=None):
+    """Select the instance to operate on.
+
+    Defaults to env.instance if instance_name is not specified.
+
+    Aborts with a help message if the instance is not defined.
+    """
+    instances = sorted(getattr(env, 'instances', {}))
+    if not instances:
+        abort("There are no instances defined in env.instances.")
+    if not instance_name:
+        instance_name = getattr(env, 'instance', None)
+    try:
+        return env.instances[instance_name]
+    except KeyError:
+        abort("Please specify an instance ({known_instances}), e.g.\n\n"
+              "  fab {instance} {command}".format(
+                  known_instances=", ".join(instances),
+                  instance=instances[0],
+                  command=env.command))
 
