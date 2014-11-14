@@ -11,6 +11,18 @@ from fabric.contrib.files import exists, append
 
 
 #
+# Command-line parsing
+#
+
+def asbool(v):
+    """Convert value to boolean."""
+    if isinstance(v, basestring):
+        return v.lower() in ('yes', 'true', 'on', '1')
+    else:
+        return bool(v)
+
+
+#
 # System management helpers
 #
 
