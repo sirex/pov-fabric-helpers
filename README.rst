@@ -7,6 +7,7 @@ intended to manage Ubuntu servers (10.04 LTS, 12.04 LTS or 14.04 LTS).
 A possibly-incomplete list of them:
 
 - ``ensure_apt_not_outdated()``
+- ``install_packages("vim screen build-essential")``
 - ``ensure_known_host("hostname ssh-rsa AAA....")``
 - ``ensure_user("username")``
 - ``git_clone("git@github.com:ProgrammersOfVilnius/project.git", "/opt/project")``

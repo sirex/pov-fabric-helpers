@@ -32,6 +32,23 @@ def ensure_apt_not_outdated():
         sudo("apt-get update -qq")
 
 
+def install_packages(*packages):
+    """Install system packages.
+
+    You can use any of these styles::
+
+        install_packages('foo bar')
+        install_packages('foo', 'bar')
+        install_packages(['foo', 'bar'])
+
+    """
+    ensure_apt_not_outdated()
+    if len(packages) == 1 and not isinstance(packages[0], str):
+        # handle lists and tuples
+        packages = packages[0]
+    sudo("apt-get install -qq -y %s" % " ".join(packages))
+
+
 def ensure_known_host(host_key, known_hosts='/root/.ssh/known_hosts'):
     """Make sure a host key exists in the known_hosts file.
 
