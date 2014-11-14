@@ -198,6 +198,7 @@ class Instance(object):
                 super(Instance, self).Instance.__init__(name, host)
                 self.home = home
 
+    Or use the ``with_params()`` classmethod.
     """
 
     def __init__(self, name, host, **kwargs):
@@ -215,6 +216,40 @@ class Instance(object):
         Mimics the API of ``collections.namedtuple``.
         """
         return self.__dict__
+
+    REQUIRED = object()
+
+    @classmethod
+    def with_params(cls, **params):
+        """Define an instance subclass
+
+        Usage example::
+
+            from pov_fabric import Instance
+
+            Instance = Instance.with_params(
+                required_arg1=Instance.REQUIRED,
+                optional_arg1='default value',
+                optional_arg2=None)
+
+        """
+
+        def __init__(self, name, host, **kw):
+            super(new_cls, self).__init__(name, host)
+            for k, v in params.items():
+                if v is cls.REQUIRED and k not in kw:
+                    raise TypeError(
+                        "__init__() requires a keyword argument '{}'"
+                        .format(k))
+                setattr(self, k, v)
+            for k, v in kw.items():
+                if k not in params:
+                    raise TypeError(
+                        "__init__() got an unexpected keyword argument '{}'"
+                        .format(k))
+                setattr(self, k, v)
+        new_cls = type('Instance', (cls, ), dict(__init__=__init__))
+        return new_cls
 
     @classmethod
     def define(cls, *args, **kwargs):

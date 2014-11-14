@@ -70,6 +70,18 @@ To facilitate this ``pov_fabric`` provides three things:
             self.user = user
             self.dbname = dbname
 
+  and since that's a bit repetetive there's a helper ::
+
+    from pov_fabric import Instance as BaseInstance
+
+    Instance = BaseInstance.with_params(
+        home='/opt/sentry',
+        user='sentry',
+        dbname='sentry',
+    )
+
+  which is equivalent to the original manual subclassing.
+
 - ``Instance.define()`` that defines new instances and creates tasks for
   selecting them ::
 
