@@ -78,7 +78,7 @@ To facilitate this ``pov_fabric`` provides three things:
             self.user = user
             self.dbname = dbname
 
-   and since that's a bit repetetive there's a helper
+   and since that's a bit repetitive there's a helper
 
    .. code:: python
 
