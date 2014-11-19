@@ -18,6 +18,8 @@ A possibly-incomplete list of them:
 
 .. _pov-admin-tools: https://github.com/ProgrammersOfVilnius/pov-admin-tools
 
+.. contents::
+
 
 Usage
 -----
@@ -131,3 +133,51 @@ Be careful if you mix styles, e.g. ::
 
 will run ``task1`` and ``task3`` on ``instance1`` and it will run ``task2`` on
 ``instance2``.
+
+
+Testing Fabfiles with Vagrant
+-----------------------------
+
+I don't know about you, but I was never able to write a fabfile.py that worked
+on the first try.  Vagrant_ was very useful for testing fabfiles without
+destroying real servers in the process.  Here's how:
+
+- Create a ``Vagrantfile`` somewhere with ::
+
+    Vagrant.configure("2") do |config|
+      config.vm.box = "precise64"  # Ubuntu 12.04
+      config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+      config.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "1024"]
+      end
+    end
+
+- Run ``vagrant up``
+
+- Run ``vagrant ssh-config`` and copy the snippet to your ``~/.ssh/config``,
+  but change the name to ``vagrantbox``, e.g. ::
+
+    Host vagrantbox
+      HostName 127.0.0.1
+      User vagrant
+      Port 2222
+      UserKnownHostsFile /dev/null
+      StrictHostKeyChecking no
+      PasswordAuthentication no
+      IdentityFile /home/mg/.vagrant.d/insecure_private_key
+      IdentitiesOnly yes
+      LogLevel FATAL
+
+- Test that ``ssh vagrantbox`` works
+
+- In your ``fabfile.py`` create a testing instance ::
+
+    Instance.define(
+        name='testing',
+        host='vagrant@vagrantbox',
+        ...
+    )
+
+- Test with ``fab testing install`` etc.
+
+.. _Vagrant: https://www.vagrantup.com/
