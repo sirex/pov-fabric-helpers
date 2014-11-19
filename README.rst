@@ -24,13 +24,17 @@ A possibly-incomplete list of them:
 Usage
 -----
 
-For now add this repository as a git submodule::
+For now add this repository as a git submodule
+
+.. code:: bash
 
   cd ~/src/project
   git submodule add https://github.com/ProgrammersOfVilnius/pov-fabric-helpers
   git submodule init
 
-and in your ``fabfile.py`` add ::
+and in your ``fabfile.py`` add
+
+.. code:: python
 
   sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'pov-fabric-helpers'))
   from pov_fabric import ...
@@ -60,7 +64,9 @@ An instance defines various parameters, such as
 
 To facilitate this ``pov_fabric`` provides three things:
 
-- an ``Instance`` class that should be subclassed to provide your own instances ::
+1. An ``Instance`` class that should be subclassed to provide your own instances
+
+   .. code:: python
 
     from pov_fabric import Instance as BaseInstance
 
@@ -72,7 +78,9 @@ To facilitate this ``pov_fabric`` provides three things:
             self.user = user
             self.dbname = dbname
 
-  and since that's a bit repetetive there's a helper ::
+   and since that's a bit repetetive there's a helper
+
+   .. code:: python
 
     from pov_fabric import Instance as BaseInstance
 
@@ -82,10 +90,12 @@ To facilitate this ``pov_fabric`` provides three things:
         dbname='sentry',
     )
 
-  which is equivalent to the original manual subclassing.
+   which is equivalent to the original manual subclassing.
 
-- ``Instance.define()`` that defines new instances and creates tasks for
-  selecting them ::
+2. ``Instance.define()`` that defines new instances and creates tasks for
+   selecting them
+
+   .. code:: python
 
     Instance.define(
         name='testing',
@@ -103,8 +113,10 @@ To facilitate this ``pov_fabric`` provides three things:
         dbname='sentry-staging',
     )
 
-- A ``get_instance()`` method that returns the currently selected instance
-  (or aborts with an error if the user didn't select one) ::
+3. A ``get_instance()`` method that returns the currently selected instance
+   (or aborts with an error if the user didn't select one)
+
+   .. code:: python
 
     from pov_fabric import get_instance
 
@@ -119,7 +131,9 @@ Previously I used a slightly different command style ::
 
     fab task1:instance1 task2:instance1 task3:instance2
 
-and this can still be supported if you write your tasks like this ::
+and this can still be supported if you write your tasks like this
+
+.. code:: python
 
     @task
     def look_around(instance=None):
@@ -142,7 +156,9 @@ I don't know about you, but I was never able to write a fabfile.py that worked
 on the first try.  Vagrant_ was very useful for testing fabfiles without
 destroying real servers in the process.  Here's how:
 
-- Create a ``Vagrantfile`` somewhere with ::
+- Create a ``Vagrantfile`` somewhere with
+
+  .. code:: ruby
 
     Vagrant.configure("2") do |config|
       config.vm.box = "precise64"  # Ubuntu 12.04
@@ -170,7 +186,9 @@ destroying real servers in the process.  Here's how:
 
 - Test that ``ssh vagrantbox`` works
 
-- In your ``fabfile.py`` create a testing instance ::
+- In your ``fabfile.py`` create a testing instance
+
+  .. code:: python
 
     Instance.define(
         name='testing',
