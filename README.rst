@@ -200,4 +200,45 @@ destroying real servers in the process.  Here's how:
 
 - Test with ``fab testing install`` etc.
 
+
+Testing instances using Docker
+------------------------------
+
+.. note::
+
+    Unfortunately this will not work if you use PostgreSQL. Not sure why, but I
+    could not install PostgreSQL on ubuntu-upstart:12.04 image.
+
+Prepare docker container::
+
+    sudo apt-get install sshpass
+    docker run --name=fabtest -p 9022:22 -d ubuntu-upstart:12.04
+    sshpass -p docker.io ssh-copy-id -p 9022 root@localhost
+    ssh -p 9022 root@localhost 'apt-get update && apt-get install sudo'
+    docker commit fabtest fabtest:12.04
+
+Add docker instance to your ``fabfile.py``:
+
+.. code:: python
+
+    Instance.define(
+        name='docker',
+        host='root@localhost:9022',
+    )
+
+Test your instance::
+
+    fab docker install
+
+If you want to test instance using fresh container, do this::
+
+    docker rm -f fabtest && docker run --name=fabtest -p 9022:22 -d fabtest:12.04
+
+If something goes wrong, you can always ssh to your container and see what is
+happening:
+
+    ssh -A -p 9022 root@localhost
+
+
+
 .. _Vagrant: https://www.vagrantup.com/
