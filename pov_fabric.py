@@ -183,7 +183,7 @@ def ensure_postgresql_db(dbname, owner):
 # pov-admin-tools
 #
 
-def changelog(message, append=False, optional=True):
+def changelog(message, context=None, append=False, optional=True):
     """Append a message to /root/Changelog, with a timestamped header.
 
     Depends on pov-admin-tools.  If it's not installed, skips the
@@ -192,21 +192,26 @@ def changelog(message, append=False, optional=True):
 
     By default the message gets a timestamped header.  Use append=True
     to append to an existing message instead of starting a new one.
+
+    If context is given, message will be formatted using given context
+    (``message = message.format(**context)``).
     """
     if exists('/usr/sbin/new-changelog-entry') or not optional:
         cmd = 'new-changelog-entry'
         if append:
             cmd += ' -a'
+        if context is not None:
+            message = message.format(**context)
         cmd += ' ' + quote(message)
         sudo(cmd, user='root')
 
 
-def changelog_append(message):
+def changelog_append(message, context=None):
     """Append a message to /root/Changelog.
 
     Shortcut for changelog(message, append=True).
     """
-    changelog(message, append=True)
+    changelog(message, context, append=True)
 
 
 #
